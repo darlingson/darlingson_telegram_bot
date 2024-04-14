@@ -11,7 +11,7 @@ if (!process.env.BOT_TOKEN) {
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
 let step = 0;
-let date, category, description, amount;
+let date: string, category : string, description: string, amount;
 
 bot.start((ctx) => ctx.reply('Welcome'));
 bot.help((ctx) => ctx.reply('Send me a sticker'));
@@ -79,7 +79,7 @@ bot.on('text', async (ctx) => {
             saveData({ date, category, description, amount });
             // Reset variables
             step = 0;
-            date = category = description = amount = null;
+            date = category = description = amount = "";
             await ctx.reply('Data saved successfully!');
             break;
         default:
@@ -87,12 +87,12 @@ bot.on('text', async (ctx) => {
     }
 });
 
-function saveData(data) {
+function saveData(data: any) {
     const filename = 'data.json';
     let jsonData = [];
 
     if (fs.existsSync(filename)) {
-        const existingData = fs.readFileSync(filename);
+        const existingData = fs.readFileSync(filename, 'utf8');
         jsonData = JSON.parse(existingData);
     }
 

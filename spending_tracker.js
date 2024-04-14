@@ -75,7 +75,7 @@ bot.on('text', async (ctx) => {
             saveData({ date, category, description, amount });
             // Reset variables
             step = 0;
-            date = category = description = amount = null;
+            date = category = description = amount = "";
             await ctx.reply('Data saved successfully!');
             break;
         default:
@@ -86,7 +86,7 @@ function saveData(data) {
     const filename = 'data.json';
     let jsonData = [];
     if (fs.existsSync(filename)) {
-        const existingData = fs.readFileSync(filename);
+        const existingData = fs.readFileSync(filename, 'utf8');
         jsonData = JSON.parse(existingData);
     }
     jsonData.push(data);

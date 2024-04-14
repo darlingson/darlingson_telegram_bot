@@ -4,5 +4,11 @@
         "category": "internet",
         "description": "internet bundle for router",
         "amount": "12000"
+    },
+    {
+        "date": "2024-04-14",
+        "category": "food",
+        "description": "chunky biscuts",
+        "amount": "1800"
     }
 ]
