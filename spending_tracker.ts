@@ -19,15 +19,15 @@ bot.on(message('sticker'), (ctx) => ctx.reply('👍'));
 bot.hears('hi', (ctx) => ctx.reply('Hey there'));
 
 bot.command('add', async (ctx) => {
-    step = 1; // Set the step to 1 to indicate asking for date
+    step = 1;
     await ctx.reply('Please enter the date (YYYY-MM-DD):');
 });
 
 bot.on('text', async (ctx) => {
     switch (step) {
-        case 1: // Asking for date
+        case 1:
             date = ctx.message.text;
-            step = 2; // Move to the next step
+            step = 2;
             await ctx.reply(`Choose a category:
             1. food
             2. utilities
@@ -37,7 +37,7 @@ bot.on('text', async (ctx) => {
             6. groceries
             7. others`);
             break;
-        case 2: // Asking for category
+        case 2:
         const option = parseInt(ctx.message.text);
         switch (option) {
             case 1:
@@ -62,22 +62,20 @@ bot.on('text', async (ctx) => {
                 category = 'others';
                 break;
             default:
-                category = 'others'; // Default to 'others' for invalid input
+                category = 'others';
                 break;
         }
-            step = 3; // Move to the next step
+            step = 3;
             await ctx.reply('Enter a description:');
             break;
-        case 3: // Asking for description
+        case 3:
             description = ctx.message.text;
-            step = 4; // Move to the next step
+            step = 4;
             await ctx.reply('Enter the amount:');
             break;
-        case 4: // Asking for amount
+        case 4:
             amount = ctx.message.text;
-            // Save data to JSON file
             saveData({ date, category, description, amount });
-            // Reset variables
             step = 0;
             date = category = description = amount = "";
             await ctx.reply('Data saved successfully!');
@@ -103,6 +101,5 @@ function saveData(data: any) {
 
 bot.launch();
 
-// Enable graceful stop
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
