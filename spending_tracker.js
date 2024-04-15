@@ -8,23 +8,36 @@ if (!process.env.BOT_TOKEN) {
     console.error('Error: BOT_TOKEN is not defined in the environment variables.');
     process.exit(1);
 }
+if (!process.env.CHAT_ID) {
+    console.error('Error: CHAT_ID is not defined in the environment variables.');
+    process.exit(1);
+}
 const bot = new telegraf_1.Telegraf(process.env.BOT_TOKEN);
 let step = 0;
 let date, category, description, amount;
+let isGame = false;
 bot.start((ctx) => ctx.reply('Welcome'));
 bot.help((ctx) => ctx.reply('Send me a sticker'));
 bot.on((0, filters_1.message)('sticker'), (ctx) => ctx.reply('👍'));
 bot.hears('hi', (ctx) => ctx.reply('Hey there'));
 bot.command('add', async (ctx) => {
-    step = 1; // Set the step to 1 to indicate asking for date
+    step = 1;
     await ctx.reply('Please enter the date (YYYY-MM-DD):');
 });
+bot.command('draft', async (ctx) => {
+    isGame = true;
+    await ctx.reply('Game started!');
+});
 bot.on('text', async (ctx) => {
-    switch (step) {
-        case 1: // Asking for date
-            date = ctx.message.text;
-            step = 2; // Move to the next step
-            await ctx.reply(`Choose a category:
+    if (isGame) {
+        playGame(ctx.message.text);
+    }
+    else {
+        switch (step) {
+            case 1:
+                date = ctx.message.text;
+                step = 2;
+                await ctx.reply(`Choose a category:
             1. food
             2. utilities
             3. entertainment
@@ -32,56 +45,73 @@ bot.on('text', async (ctx) => {
             5. clothes
             6. groceries
             7. others`);
-            break;
-        case 2: // Asking for category
-            const option = parseInt(ctx.message.text);
-            switch (option) {
-                case 1:
-                    category = 'food';
-                    break;
-                case 2:
-                    category = 'utilities';
-                    break;
-                case 3:
-                    category = 'entertainment';
-                    break;
-                case 4:
-                    category = 'internet';
-                    break;
-                case 5:
-                    category = 'clothes';
-                    break;
-                case 6:
-                    category = 'groceries';
-                    break;
-                case 7:
-                    category = 'others';
-                    break;
-                default:
-                    category = 'others'; // Default to 'others' for invalid input
-                    break;
-            }
-            step = 3; // Move to the next step
-            await ctx.reply('Enter a description:');
-            break;
-        case 3: // Asking for description
-            description = ctx.message.text;
-            step = 4; // Move to the next step
-            await ctx.reply('Enter the amount:');
-            break;
-        case 4: // Asking for amount
-            amount = ctx.message.text;
-            // Save data to JSON file
-            saveData({ date, category, description, amount });
-            // Reset variables
-            step = 0;
-            date = category = description = amount = "";
-            await ctx.reply('Data saved successfully!');
-            break;
-        default:
-            break;
+                break;
+            case 2:
+                const option = parseInt(ctx.message.text);
+                switch (option) {
+                    case 1:
+                        category = 'food';
+                        break;
+                    case 2:
+                        category = 'utilities';
+                        break;
+                    case 3:
+                        category = 'entertainment';
+                        break;
+                    case 4:
+                        category = 'internet';
+                        break;
+                    case 5:
+                        category = 'clothes';
+                        break;
+                    case 6:
+                        category = 'groceries';
+                        break;
+                    case 7:
+                        category = 'others';
+                        break;
+                    default:
+                        category = 'others';
+                        break;
+                }
+                step = 3;
+                await ctx.reply('Enter a description:');
+                break;
+            case 3:
+                description = ctx.message.text;
+                step = 4;
+                await ctx.reply('Enter the amount:');
+                break;
+            case 4:
+                amount = ctx.message.text;
+                saveData({ date, category, description, amount });
+                step = 0;
+                date = category = description = amount = "";
+                await ctx.reply('Data saved successfully!');
+                break;
+            default:
+                break;
+        }
     }
 });
+function playGame(text) {
+    if (!process.env.CHAT_ID) {
+        console.error('Error: CHAT_ID is not defined in the environment variables.');
+        process.exit(1);
+    }
+    const options = ['rock', 'paper', 'scissors'];
+    const computerChoice = options[Math.floor(Math.random() * options.length)];
+    const userChoice = text.toLowerCase();
+    if (userChoice === computerChoice) {
+        bot.telegram.sendMessage(process.env.CHAT_ID, 'Tie! Try again!');
+    }
+    else if ((userChoice === 'rock' && computerChoice === 'scissors') || (userChoice === 'paper' && computerChoice === 'rock') || (userChoice === 'scissors' && computerChoice === 'paper')) {
+        bot.telegram.sendMessage(process.env.CHAT_ID, 'You win!');
+    }
+    else {
+        bot.telegram.sendMessage(process.env.CHAT_ID, 'You lose!');
+    }
+}
 function saveData(data) {
     const filename = 'data.json';
     let jsonData = [];
@@ -93,6 +123,5 @@ function saveData(data) {
     fs.writeFileSync(filename, JSON.stringify(jsonData, null, 4));
 }
 bot.launch();
-// Enable graceful stop
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));

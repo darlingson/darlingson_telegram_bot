@@ -7,11 +7,16 @@ if (!process.env.BOT_TOKEN) {
     console.error('Error: BOT_TOKEN is not defined in the environment variables.');
     process.exit(1);
 }
+if (!process.env.CHAT_ID) {
+    console.error('Error: CHAT_ID is not defined in the environment variables.');
+    process.exit(1);
+}
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
 let step = 0;
 let date: string, category : string, description: string, amount;
+let isGame = false;
 
 bot.start((ctx) => ctx.reply('Welcome'));
 bot.help((ctx) => ctx.reply('Send me a sticker'));
@@ -22,8 +27,15 @@ bot.command('add', async (ctx) => {
     step = 1;
     await ctx.reply('Please enter the date (YYYY-MM-DD):');
 });
-
+bot.command('draft', async (ctx) => {
+    isGame = true;
+    await ctx.reply('Game started!');
+})
 bot.on('text', async (ctx) => {
+    if (isGame) {
+     playGame(ctx.message.text)   
+    }
+    else {
     switch (step) {
         case 1:
             date = ctx.message.text;
@@ -83,8 +95,25 @@ bot.on('text', async (ctx) => {
         default:
             break;
     }
+    }
 });
-
+function playGame(text: string) {
+    if (!process.env.CHAT_ID) {
+        console.error('Error: CHAT_ID is not defined in the environment variables.');
+        process.exit(1);
+    }
+    
+    const options = ['rock', 'paper', 'scissors'];
+    const computerChoice = options[Math.floor(Math.random() * options.length)];
+    const userChoice = text.toLowerCase();
+    if (userChoice === computerChoice) {
+        bot.telegram.sendMessage(process.env.CHAT_ID, 'Tie! Try again!');
+    } else if ((userChoice === 'rock' && computerChoice === 'scissors') || (userChoice === 'paper' && computerChoice === 'rock') || (userChoice === 'scissors' && computerChoice === 'paper')) {
+        bot.telegram.sendMessage(process.env.CHAT_ID, 'You win!');
+    } else {
+        bot.telegram.sendMessage(process.env.CHAT_ID, 'You lose!');
+    }
+}
 function saveData(data: any) {
     const filename = 'data.json';
     let jsonData = [];
